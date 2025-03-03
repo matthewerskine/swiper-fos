@@ -6,6 +6,18 @@ import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
 
+// For debugging
+const DEBUG = true;
+const log = (message, data) => {
+  if (DEBUG) {
+    if (data) {
+      console.log(`[Swiper] ${message}`, data);
+    } else {
+      console.log(`[Swiper] ${message}`);
+    }
+  }
+};
+
 // Define slide configurations with positioning, scaling, and z-index values
 const SLIDE_CONFIGS = {
   1: {
@@ -83,6 +95,7 @@ const SwiperDemo = () => {
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
   const [isMouseOverContainer, setIsMouseOverContainer] = useState(false);
+  const [isMouseOverSlide, setIsMouseOverSlide] = useState(false);
   const dragTimeoutRef = useRef(null);
   const transitionTimeoutRef = useRef(null);
   const autoplayTimeoutRef = useRef(null);
@@ -92,7 +105,9 @@ const SwiperDemo = () => {
   // Check if device is mobile
   useEffect(() => {
     const checkMobile = () => {
-      setIsMobile(window.innerWidth < 768);
+      const newIsMobile = window.innerWidth < 768;
+      setIsMobile(newIsMobile);
+      log(`Device detected as ${newIsMobile ? "mobile" : "desktop"}`);
     };
 
     checkMobile();
@@ -100,12 +115,16 @@ const SwiperDemo = () => {
 
     return () => {
       window.removeEventListener("resize", checkMobile);
+      log("Component unmounted, resize listener removed");
     };
   }, []);
 
   // Cleanup timeouts on unmount
   useEffect(() => {
+    log("Component mounted");
+
     return () => {
+      log("Component unmounting, cleaning up timeouts");
       if (dragTimeoutRef.current) {
         clearTimeout(dragTimeoutRef.current);
       }
@@ -120,15 +139,18 @@ const SwiperDemo = () => {
 
   // Handle Swiper initialization
   const handleSwiperInit = (swiper) => {
+    log("Swiper initialized");
     swiperRef.current = swiper;
     setIsSwiperInitialized(true);
   };
 
   // Pause autoplay when mouse enters the container
   const handleContainerMouseEnter = () => {
+    log("Mouse entered container");
     setIsMouseOverContainer(true);
 
     if (!isMobile && isSwiperInitialized && swiperRef.current) {
+      log("Pausing autoplay (container mouse enter)");
       setIsAutoplayPaused(true);
       if (swiperRef.current.autoplay) {
         swiperRef.current.autoplay.stop();
@@ -138,19 +160,24 @@ const SwiperDemo = () => {
 
   // Resume autoplay when mouse leaves the container
   const handleContainerMouseLeave = () => {
+    log("Mouse left container");
     setIsMouseOverContainer(false);
 
-    if (!isMobile && isSwiperInitialized && !isDragging) {
-      // Clear any existing timeout
+    if (!isMobile && isSwiperInitialized && !isDragging && !isMouseOverSlide) {
       if (autoplayTimeoutRef.current) {
         clearTimeout(autoplayTimeoutRef.current);
       }
 
-      // Set a delay before restarting autoplay
+      log("Scheduling autoplay resume after container leave");
       autoplayTimeoutRef.current = setTimeout(() => {
-        setIsAutoplayPaused(false);
-        if (swiperRef.current && swiperRef.current.autoplay) {
-          swiperRef.current.autoplay.start();
+        if (!isMouseOverSlide) {
+          log("Resuming autoplay (after container leave delay)");
+          setIsAutoplayPaused(false);
+          if (swiperRef.current && swiperRef.current.autoplay) {
+            swiperRef.current.autoplay.start();
+          }
+        } else {
+          log("Not resuming autoplay - mouse is still over a slide");
         }
       }, 1000);
     }
@@ -161,6 +188,8 @@ const SwiperDemo = () => {
     if (isDragging || !isSwiperInitialized || isTransitioning || isMobile)
       return;
 
+    log(`Mouse entered slide ${index}`);
+    setIsMouseOverSlide(true);
     setActiveSlide(index);
   };
 
@@ -169,91 +198,121 @@ const SwiperDemo = () => {
     if (isDragging || !isSwiperInitialized || isTransitioning || isMobile)
       return;
 
+    log("Mouse left slide");
+    setIsMouseOverSlide(false);
     setActiveSlide(null);
   };
 
   // Handle slide click for mobile
   const handleSlideClick = (index) => {
     if (isMobile && !isDragging && !isTransitioning) {
+      log(`Slide ${index} tapped on mobile`);
+
+      // Set transitioning state to prevent multiple taps during animation
+      setIsTransitioning(true);
+      log("Setting transitioning state to prevent multiple taps");
+
+      // Stop autoplay when a slide is tapped
+      if (swiperRef.current && swiperRef.current.autoplay) {
+        log("Pausing autoplay (slide tap)");
+        swiperRef.current.autoplay.stop();
+        setIsAutoplayPaused(true);
+      }
+
       if (activeSlide === index) {
         // If tapping the already-active slide, deactivate it
+        log("Tapped already-active slide, deactivating");
         setActiveSlide(null);
 
-        // Resume autoplay after a delay
-        if (swiperRef.current && isSwiperInitialized) {
-          setTimeout(() => {
-            if (swiperRef.current && swiperRef.current.autoplay) {
-              swiperRef.current.autoplay.start();
-              setIsAutoplayPaused(false);
-            }
-          }, 1000);
+        // Resume autoplay with delay
+        if (autoplayTimeoutRef.current) {
+          clearTimeout(autoplayTimeoutRef.current);
         }
-      } else {
-        // Set transitioning state to prevent multiple taps during animation
-        setIsTransitioning(true);
 
-        // Stop autoplay when a slide is tapped
-        if (swiperRef.current && isSwiperInitialized) {
-          if (swiperRef.current.autoplay) {
-            swiperRef.current.autoplay.stop();
-            setIsAutoplayPaused(true);
+        log("Scheduling autoplay resume after tap");
+        autoplayTimeoutRef.current = setTimeout(() => {
+          log("Resuming autoplay (after tap delay)");
+          if (swiperRef.current && swiperRef.current.autoplay) {
+            swiperRef.current.autoplay.start();
+            setIsAutoplayPaused(false);
           }
+        }, 2000);
+      } else {
+        if (swiperRef.current && isSwiperInitialized) {
+          // First center the tapped slide precisely
+          const slideIndex = index;
 
-          // Center the tapped slide
-          swiperRef.current.slideTo(index);
+          log(`Centering slide ${slideIndex} with slideToLoop`);
+          // Use slideToLoop for proper centering with loop mode
+          swiperRef.current.slideToLoop(slideIndex, 300, true);
+
+          // Additional step to ensure centering
+          setTimeout(() => {
+            if (swiperRef.current) {
+              log("Updating swiper to ensure proper centering");
+              // Update swiper to ensure centering
+              swiperRef.current.updateSize();
+              swiperRef.current.updateSlides();
+              swiperRef.current.updateProgress();
+            }
+          }, 50);
+
+          // Set the active state to show visual feedback and scale the image
+          log(`Setting slide ${index} as active to scale the image`);
+          setActiveSlide(index);
         }
-
-        // Set the tapped slide as active to trigger the CSS effects
-        setActiveSlide(index);
-
-        // Clear any existing transition timeout
-        if (transitionTimeoutRef.current) {
-          clearTimeout(transitionTimeoutRef.current);
-        }
-
-        // Allow interactions again after animation completes
-        transitionTimeoutRef.current = setTimeout(() => {
-          setIsTransitioning(false);
-        }, 400); // Slightly longer than the CSS transition
       }
+
+      log("Scheduling end of transition state");
+      transitionTimeoutRef.current = setTimeout(() => {
+        log("Ending transition state, allowing new interactions");
+        setIsTransitioning(false);
+      }, 400);
     }
   };
 
   // Handle drag start
   const handleDragStart = () => {
+    log("Drag started");
     setIsDragging(true);
     setActiveSlide(null);
 
-    // Pause autoplay during dragging
+    // Pause autoplay during drag
     if (swiperRef.current && swiperRef.current.autoplay) {
+      log("Pausing autoplay (drag start)");
       swiperRef.current.autoplay.stop();
       setIsAutoplayPaused(true);
     }
-
-    // Clear any existing timeout
-    if (dragTimeoutRef.current) {
-      clearTimeout(dragTimeoutRef.current);
-    }
   };
 
-  // Handle drag end with a delay before re-enabling hover effects
+  // Handle drag end
   const handleDragEnd = () => {
+    log("Drag ended");
+
     if (dragTimeoutRef.current) {
       clearTimeout(dragTimeoutRef.current);
     }
 
     // Add a delay before re-enabling hover effects
+    log("Scheduling end of dragging state");
     dragTimeoutRef.current = setTimeout(() => {
+      log("Ending dragging state");
       setIsDragging(false);
 
-      // Resume autoplay if mouse is not over container
+      // Resume autoplay after drag ends
       if (
         !isMouseOverContainer &&
+        !isMouseOverSlide &&
         swiperRef.current &&
         swiperRef.current.autoplay
       ) {
+        log("Resuming autoplay (after drag end)");
         swiperRef.current.autoplay.start();
         setIsAutoplayPaused(false);
+      } else {
+        log(
+          "Not resuming autoplay: mouse over container/slide or swiper not ready"
+        );
       }
     }, 500);
   };
@@ -319,11 +378,26 @@ const SwiperDemo = () => {
             }
           }}
         >
-          <div className="slide-inner">
+          <div
+            className="slide-inner"
+            onClick={(e) => {
+              // Prevent event bubbling to avoid triggering the slide's onClick twice
+              e.stopPropagation();
+              handleSlideClick(index);
+            }}
+          >
             <img
               className="slide-image"
               src={`https://picsum.photos/id/${20 + position}/500/800`}
               alt={`Slide ${position}`}
+              onClick={(e) => {
+                // Prevent event bubbling to avoid triggering parent onClick handlers
+                e.stopPropagation();
+                handleSlideClick(index);
+              }}
+              onLoad={() =>
+                log(`Image loaded for slide ${index} (position ${position})`)
+              }
             />
           </div>
         </SwiperSlide>
@@ -334,6 +408,7 @@ const SwiperDemo = () => {
   };
 
   const slides = generateSlides();
+  log(`Generated ${slides.length} slides`);
 
   return (
     <div
@@ -361,7 +436,7 @@ const SwiperDemo = () => {
           // reverseDirection: false, // Don't reverse direction
         }}
         loop={true}
-        // speed={5000} // Slower speed for smoother continuous scrolling
+        speed={5000} // Slower speed for smoother continuous scrolling
         freeMode={{
           enabled: true,
           momentum: true,

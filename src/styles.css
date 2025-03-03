@@ -146,6 +146,7 @@ footer {
 
 .slide-active .slide-inner {
   transform: scale(1) translate(0, 0) !important;
+  transition: transform 0.4s ease-out;
 }
 
 /* When a slide is active, push others away */
@@ -195,41 +196,50 @@ footer {
 /* Mobile-specific adjustments */
 @media (max-width: 768px) {
   .swiper-container {
-    height: 500px;
-    padding: 40px 0;
+    height: 320px;
+    padding: 20px;
   }
 
   .swiper-slide {
-    width: 180px !important;
+    width: 140px;
+    height: 280px;
   }
 
   .slide {
-    height: 250px;
-    border-width: 3px;
+    opacity: 0.8;
+    height: 280px;
+    transform: scale(0.95);
+    transition: transform 0.4s ease, opacity 0.4s ease, box-shadow 0.4s ease;
   }
 
-  /* Stronger visual indication for active slides on mobile */
+  /* Make sure active slides on mobile properly scale to 1.0 */
   .slide-active {
-    transform: translateY(-8px); /* Subtle upward movement */
-    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
+    transform: translateY(-10px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+    opacity: 1;
+    z-index: 10 !important;
+    transition: all 0.4s ease;
   }
 
-  /* Ensure tapped slide stands out more on mobile */
   .slide-active .slide-inner {
-    transform: scale(1.1) translate(0, 0) !important; /* Slightly larger scale on mobile */
+    transform: scale(1) translate(0, 0) !important;
+    transition: transform 0.4s ease-out;
   }
 
+  /* Enhanced push effect for inactive slides */
   .has-active-slide .slide-inactive[data-relative-position="before"] {
-    transform: translateX(-40px);
-    opacity: 0.7; /* Reduce opacity of non-active slides */
+    transform: translateX(-60px);
+    opacity: 0.6;
+    transition: all 0.4s ease;
   }
 
   .has-active-slide .slide-inactive[data-relative-position="after"] {
-    transform: translateX(40px);
-    opacity: 0.7; /* Reduce opacity of non-active slides */
+    transform: translateX(60px);
+    opacity: 0.6;
+    transition: all 0.4s ease;
   }
 
-  /* Add visual feedback for tapping */
+  /* Pulsing border animation for active slide on mobile */
   .slide-active::after {
     content: "";
     position: absolute;
@@ -237,33 +247,43 @@ footer {
     left: 0;
     right: 0;
     bottom: 0;
-    border-radius: 10px;
-    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
-    pointer-events: none;
+    border: 2px solid rgba(255, 255, 255, 0.8);
+    border-radius: 15px;
     animation: pulseBorder 1.5s infinite;
+    pointer-events: none;
+    z-index: 11;
+  }
+
+  /* Disable pulsing during transitions */
+  .is-transitioning .slide-active::after {
+    animation: none;
+    opacity: 0;
   }
 
   @keyframes pulseBorder {
     0% {
-      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+      opacity: 0.8;
+      transform: scale(1);
     }
     50% {
-      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+      opacity: 0.4;
+      transform: scale(1.05);
     }
     100% {
-      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+      opacity: 0.8;
+      transform: scale(1);
     }
   }
 
-  /* Dragging should disable all effects */
+  /* Disable effects during dragging */
   .is-dragging .slide-active::after {
     animation: none;
-    box-shadow: none;
+    opacity: 0;
   }
 
   .is-dragging .slide-active {
-    transform: none !important;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+    transform: none;
+    box-shadow: none;
   }
 
   .is-dragging .slide-active .slide-inner {
