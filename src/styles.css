@@ -31,47 +31,268 @@ footer {
 /* Swiper container styles */
 .swiper-container {
   width: 100%;
-  height: 400px;
-  background: repeating-linear-gradient(
-    45deg,
-    #f0f0f0,
-    #f0f0f0 10px,
-    #e0e0e0 0,
-    #e0e0e0 20px
-  );
+  height: 600px;
+  padding: 80px 0;
+  background: #f8f8f8;
+  overflow: hidden;
+  position: relative;
+  perspective: 1000px; /* Add 3D perspective */
 }
 
 .swiper {
-  pointer-events: none;
   width: 100%;
   height: 100%;
+  position: relative;
+  overflow: visible; /* Allow slides to overlap container */
 }
 
 .swiper-wrapper {
   transition-timing-function: linear;
+  align-items: center;
+  position: relative;
+  padding: 20px 0; /* Add padding to accommodate larger slides */
 }
-*/
 
-/* Slide styles */
- .slide {
-  display: flex !important;
+/* Slide styles - using a simpler approach */
+.swiper-slide {
+  position: relative;
+  width: 250px !important; /* Fixed width */
+  height: auto;
+  transform-origin: center center;
+  overflow: visible;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+/* Basic slide styling */
+.slide {
+  position: relative;
+  height: 280px;
+  width: 100%;
+  border-radius: 10px;
+  overflow: hidden;
+  user-select: none;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+  opacity: 0.85;
+  border: 4px solid white;
+  box-sizing: border-box;
+}
+
+.slide-inner {
+  width: 100%;
+  height: 100%;
+  display: flex;
   justify-content: center;
   align-items: center;
-  height: 90%;
-  align-self: center;
-  pointer-events: auto;
-  user-select: none;
-
-  transition: opacity 0.3s ease;
-  opacity: 0.7;
+  transform-origin: center center;
+  transition: all 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
 }
 
-.slide-active {
+/* Default transforms for slides based on their position */
+.slide[data-position="1"] .slide-inner {
+  transform: scale(0.8) translate(0px, calc(0% + 20px));
+}
+
+.slide[data-position="2"] .slide-inner {
+  transform: scale(0.6) translate(0px, calc(-10%));
+}
+
+.slide[data-position="3"] .slide-inner {
+  transform: scale(0.5) translate(calc(-15%), calc(25%));
+}
+
+.slide[data-position="4"] .slide-inner {
+  transform: scale(0.6) translate(calc(20%), calc(0%));
+}
+
+.slide[data-position="5"] .slide-inner {
+  transform: scale(0.5) translate(calc(-10%), calc(25%));
+}
+
+.slide[data-position="6"] .slide-inner {
+  transform: scale(0.6) translate(calc(-10%), calc(0%));
+}
+
+.slide[data-position="7"] .slide-inner {
+  transform: scale(0.5) translate(10px, calc(20%));
+}
+
+/* Autoplay visual indicator */
+.autoplay-paused::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: #ff8427;
+  box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.autoplay-paused::before {
   opacity: 1;
 }
 
+/* Active slide effects */
+.slide-active {
+  opacity: 1;
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+  z-index: 10 !important;
+}
+
+.slide-active .slide-inner {
+  transform: scale(1) translate(0, 0) !important;
+}
+
+/* When a slide is active, push others away */
+.has-active-slide .slide-inactive[data-relative-position="before"] {
+  transform: translateX(-60px);
+}
+
+.has-active-slide .slide-inactive[data-relative-position="after"] {
+  transform: translateX(60px);
+}
+
+/* Slide hover effect */
+.slide:hover {
+  opacity: 1;
+}
+
+/* Styles for dragging state */
+.is-dragging .slide,
+.slide.is-dragging {
+  transition: all 0.1s ease !important; /* Faster transitions during drag */
+  cursor: grabbing;
+}
+
+/* Disable transforms during dragging */
+.is-dragging .slide-inactive[data-relative-position] {
+  transform: none !important;
+  opacity: 0.85 !important;
+}
+
+/* Transition state styles - smoother animations */
+.is-transitioning .slide {
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+.slide.is-transitioning .slide-inner {
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1) !important;
+}
+
+/* Images within slides */
 .slide-image {
   width: 100%;
   height: 100%;
   object-fit: cover;
+  transition: all 0.35s ease;
+}
+
+/* Mobile-specific adjustments */
+@media (max-width: 768px) {
+  .swiper-container {
+    height: 500px;
+    padding: 40px 0;
+  }
+
+  .swiper-slide {
+    width: 180px !important;
+  }
+
+  .slide {
+    height: 250px;
+    border-width: 3px;
+  }
+
+  /* Stronger visual indication for active slides on mobile */
+  .slide-active {
+    transform: translateY(-8px); /* Subtle upward movement */
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2); /* Enhanced shadow */
+  }
+
+  /* Ensure tapped slide stands out more on mobile */
+  .slide-active .slide-inner {
+    transform: scale(1.1) translate(0, 0) !important; /* Slightly larger scale on mobile */
+  }
+
+  .has-active-slide .slide-inactive[data-relative-position="before"] {
+    transform: translateX(-40px);
+    opacity: 0.7; /* Reduce opacity of non-active slides */
+  }
+
+  .has-active-slide .slide-inactive[data-relative-position="after"] {
+    transform: translateX(40px);
+    opacity: 0.7; /* Reduce opacity of non-active slides */
+  }
+
+  /* Add visual feedback for tapping */
+  .slide-active::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    border-radius: 10px;
+    box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+    pointer-events: none;
+    animation: pulseBorder 1.5s infinite;
+  }
+
+  @keyframes pulseBorder {
+    0% {
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+    }
+    50% {
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.8);
+    }
+    100% {
+      box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.5);
+    }
+  }
+
+  /* Dragging should disable all effects */
+  .is-dragging .slide-active::after {
+    animation: none;
+    box-shadow: none;
+  }
+
+  .is-dragging .slide-active {
+    transform: none !important;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .is-dragging .slide-active .slide-inner {
+    transform: none !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .swiper-container {
+    height: 400px;
+    padding: 30px 0;
+  }
+
+  .swiper-slide {
+    width: 150px !important;
+  }
+
+  .slide {
+    height: 200px;
+    border-width: 2px;
+  }
+
+  .has-active-slide .slide-inactive[data-relative-position="before"] {
+    transform: translateX(-30px);
+    opacity: 0.6; /* Further reduce opacity for smaller screens */
+  }
+
+  .has-active-slide .slide-inactive[data-relative-position="after"] {
+    transform: translateX(30px);
+    opacity: 0.6; /* Further reduce opacity for smaller screens */
+  }
 }
