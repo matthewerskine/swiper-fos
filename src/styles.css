@@ -92,27 +92,21 @@ footer {
 .slide[data-position="1"] .slide-inner {
   transform: scale(0.8) translate(0px, calc(0% + 20px));
 }
-
 .slide[data-position="2"] .slide-inner {
   transform: scale(0.6) translate(0px, calc(-10%));
 }
-
 .slide[data-position="3"] .slide-inner {
   transform: scale(0.5) translate(calc(-15%), calc(25%));
 }
-
 .slide[data-position="4"] .slide-inner {
   transform: scale(0.6) translate(calc(20%), calc(0%));
 }
-
 .slide[data-position="5"] .slide-inner {
   transform: scale(0.5) translate(calc(-10%), calc(25%));
 }
-
 .slide[data-position="6"] .slide-inner {
   transform: scale(0.6) translate(calc(-10%), calc(0%));
 }
-
 .slide[data-position="7"] .slide-inner {
   transform: scale(0.5) translate(10px, calc(20%));
 }

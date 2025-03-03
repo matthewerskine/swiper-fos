@@ -18,7 +18,7 @@ const log = (message, data) => {
   }
 };
 
-// Define slide configurations with positioning, scaling, and z-index values
+// Define slide configurations
 const SLIDE_CONFIGS = {
   1: {
     posX: "0px",
@@ -101,6 +101,7 @@ const SwiperDemo = () => {
   const autoplayTimeoutRef = useRef(null);
   const containerRef = useRef(null);
   const slidesRef = useRef([]);
+  const [touchStartPosition, setTouchStartPosition] = useState(null);
 
   // Check if device is mobile
   useEffect(() => {
@@ -187,7 +188,6 @@ const SwiperDemo = () => {
   const handleMouseEnter = (index) => {
     if (isDragging || !isSwiperInitialized || isTransitioning || isMobile)
       return;
-
     log(`Mouse entered slide ${index}`);
     setIsMouseOverSlide(true);
     setActiveSlide(index);
@@ -197,7 +197,6 @@ const SwiperDemo = () => {
   const handleMouseLeave = () => {
     if (isDragging || !isSwiperInitialized || isTransitioning || isMobile)
       return;
-
     log("Mouse left slide");
     setIsMouseOverSlide(false);
     setActiveSlide(null);
@@ -207,8 +206,6 @@ const SwiperDemo = () => {
   const handleSlideClick = (index) => {
     if (isMobile && !isDragging && !isTransitioning) {
       log(`Slide ${index} tapped on mobile`);
-
-      // Set transitioning state to prevent multiple taps during animation
       setIsTransitioning(true);
       log("Setting transitioning state to prevent multiple taps");
 
@@ -276,6 +273,7 @@ const SwiperDemo = () => {
     log("Drag started");
     setIsDragging(true);
     setActiveSlide(null);
+    setTouchStartPosition(null); // Reset touch start position
 
     // Pause autoplay during drag
     if (swiperRef.current && swiperRef.current.autoplay) {
@@ -317,43 +315,43 @@ const SwiperDemo = () => {
     }, 500);
   };
 
-  // Get total number of active slides
-  const getTotalSlides = () => {
-    return Object.values(SLIDE_CONFIGS).filter((config) => !config._hide)
-      .length;
+  // CheckForDrag (more accurate for detecting tap vs drag)
+  const touchStartCoords = (e) => {
+    window.checkForDrag = e.touches?.[0]?.clientX;
   };
 
-  // Function to generate slides with the positioning logic
+  // If a tap is detected, run a tap handler
+  const touchEndCoords = (e) => {
+    const touchEnd = e.changedTouches?.[0]?.clientX;
+    if (
+      touchEnd < window.checkForDrag + 5 &&
+      touchEnd > window.checkForDrag - 5
+    ) {
+      // It's a click (minimal movement)
+      const index = e.currentTarget?.dataset?.index;
+      handleSlideClick(index);
+    }
+  };
+
+  // Function to generate slides
   const generateSlides = () => {
     const slides = [];
-    const visibleSlidesCount = 20; // Generate enough slides for looping
-
-    // Creating slides dynamically
+    const visibleSlidesCount = 20;
     for (let index = 0; index < visibleSlidesCount; index++) {
-      const position = (index % 7) + 1; // Cycle through the 7 slide configs
+      const position = (index % 7) + 1;
       const config = SLIDE_CONFIGS[position];
+      if (config._hide) continue;
 
-      // Skip this slide if _hide is true
-      if (config._hide) {
-        continue;
-      }
-
-      // Active states
       const isActive = activeSlide === index;
-
-      // The main slide has a class that will be targeted by CSS for custom styling
       const slideClasses = `slide ${isActive ? "slide-active" : ""} ${
         activeSlide !== null && !isActive ? "slide-inactive" : ""
       } ${isDragging ? "is-dragging" : ""} ${
         isTransitioning ? "is-transitioning" : ""
       }`;
-
-      // Apply the data attributes to help with CSS selection
       const dataAttributes = {
         "data-index": index,
         "data-active": isActive ? "true" : "false",
         "data-position": position,
-        // If there's an active slide and this isn't it, determine if this is before or after
         ...(activeSlide !== null &&
           !isActive && {
             "data-relative-position": index < activeSlide ? "before" : "after",
@@ -362,6 +360,7 @@ const SwiperDemo = () => {
 
       slides.push(
         <SwiperSlide
+          tag="span"
           key={index}
           className={slideClasses}
           {...dataAttributes}
@@ -381,7 +380,6 @@ const SwiperDemo = () => {
           <div
             className="slide-inner"
             onClick={(e) => {
-              // Prevent event bubbling to avoid triggering the slide's onClick twice
               e.stopPropagation();
               handleSlideClick(index);
             }}
@@ -391,7 +389,6 @@ const SwiperDemo = () => {
               src={`https://picsum.photos/id/${20 + position}/500/800`}
               alt={`Slide ${position}`}
               onClick={(e) => {
-                // Prevent event bubbling to avoid triggering parent onClick handlers
                 e.stopPropagation();
                 handleSlideClick(index);
               }}
@@ -403,7 +400,6 @@ const SwiperDemo = () => {
         </SwiperSlide>
       );
     }
-
     return slides;
   };
 
@@ -423,29 +419,23 @@ const SwiperDemo = () => {
     >
       <Swiper
         onSwiper={handleSwiperInit}
-        spaceBetween={-20}
+        spaceBetween={-80}
         slidesPerView="auto"
         centeredSlides={false}
         modules={[Autoplay, FreeMode]}
-        autoplay={{
-          delay: 0, // Set to 0 for continuous scrolling
-          // disableOnInteraction: false, // Don't disable on interaction
-          // pauseOnMouseEnter: false, // We'll handle this manually
-          // stopOnLastSlide: false, // Don't stop on last slide
-          // waitForTransition: false, // Don't wait for transition
-          // reverseDirection: false, // Don't reverse direction
-        }}
+        autoplay={{ delay: 0 }}
         loop={true}
-        speed={5000} // Slower speed for smoother continuous scrolling
+        speed={5000}
         freeMode={{
           enabled: true,
           momentum: true,
           momentumRatio: 0.25,
         }}
-        onTouchStart={handleDragStart}
-        onTouchEnd={handleDragEnd}
+        onTouchStart={touchStartCoords}
+        onTouchEnd={touchEndCoords}
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
+        draggable={true}
       >
         {slides}
       </Swiper>
