@@ -7,6 +7,8 @@ import "swiper/css/pagination";
 import freeMode from "./FreeMode";
 import Autoplay from "./Autoplay";
 
+const SWIPER_SPEED = 5000;
+
 // For debugging
 const DEBUG = true;
 const log = (message, data) => {
@@ -101,7 +103,7 @@ const customSlideToLoop = function (
     const viewportWidth = swiper.width;
     const slideWidth = slideImage.offsetWidth;
 
-    const slideRect = targetSlide.getBoundingClientRect();
+    // const slideRect = targetSlide.getBoundingClientRect();
     const imageRect = slideImage.getBoundingClientRect();
     const containerRect = swiper.el.getBoundingClientRect();
 
@@ -320,23 +322,48 @@ const SwiperDemo = () => {
   };
 
   const handleContainerMouseLeave = () => {
-    log("Mouse left container");
+    log("Mouse left container", {
+      isMobile,
+      isSwiperInitialized,
+      isDragging,
+      isMouseOverSlide,
+    });
 
-    if (!isMobile && isSwiperInitialized && !isDragging && !isMouseOverSlide) {
+    // When mouse leaves container, we know it can't be over any slide
+    // Forcibly reset the mouseOverSlide state
+    setIsMouseOverSlide(false);
+
+    if (!isMobile && isSwiperInitialized && !isDragging) {
       if (autoplayTimeoutRef.current) {
         clearTimeout(autoplayTimeoutRef.current);
       }
 
       log("Scheduling autoplay resume after container leave");
       autoplayTimeoutRef.current = setTimeout(() => {
-        if (!isMouseOverSlide) {
-          log("Resuming autoplay (after container leave delay)");
-          setIsAutoplayPaused(false);
-          if (swiperRef.current && swiperRef.current.autoplay) {
-            swiperRef.current.autoplay.start();
-          }
-        } else {
-          log("Not resuming autoplay - mouse is still over a slide");
+        // Since we've already left the container, no need to check isMouseOverSlide again
+        log("Resuming autoplay (after container leave delay)");
+        setIsAutoplayPaused(false);
+        if (swiperRef.current && swiperRef.current.autoplay) {
+          // Completely reinitialize autoplay to avoid the glitch
+          swiperRef.current.autoplay.stop();
+
+          // Force a small delay before restarting to ensure clean state
+          setTimeout(() => {
+            if (swiperRef.current) {
+              // Reset the autoplay with original parameters
+              swiperRef.current.params.autoplay = {
+                delay: 0,
+                disableOnInteraction: false,
+                waitForTransition: true,
+              };
+
+              // Ensure the speed parameter is preserved
+              swiperRef.current.params.speed = SWIPER_SPEED;
+
+              swiperRef.current.autoplay.start();
+              log(`Autoplay resumed with speed: ${SWIPER_SPEED}ms`);
+            }
+          }, 50);
         }
       }, 1000);
     }
@@ -362,6 +389,32 @@ const SwiperDemo = () => {
     const handleBackgroundTap = () => {
       log(`Background tap detected, deactivating current slide`);
       setActiveSlide(null);
+
+      // Resume autoplay when tapping away from the slider on mobile
+      if (isMobile && swiperRef.current && swiperRef.current.autoplay) {
+        log(`Resuming autoplay after background tap on mobile`);
+        setIsAutoplayPaused(false);
+
+        // Use the same approach as for desktop to avoid the glitch
+        swiperRef.current.autoplay.stop();
+
+        setTimeout(() => {
+          if (swiperRef.current) {
+            // Reset the autoplay with original parameters
+            swiperRef.current.params.autoplay = {
+              delay: 0,
+              disableOnInteraction: false,
+              waitForTransition: true,
+            };
+
+            // Ensure the speed parameter is preserved
+            swiperRef.current.params.speed = SWIPER_SPEED;
+
+            swiperRef.current.autoplay.start();
+            log(`Autoplay resumed with speed: ${SWIPER_SPEED}ms`);
+          }
+        }, 50);
+      }
     };
 
     window.addEventListener("swiperBackgroundTap", handleBackgroundTap);
@@ -369,7 +422,7 @@ const SwiperDemo = () => {
     return () => {
       window.removeEventListener("swiperBackgroundTap", handleBackgroundTap);
     };
-  }, []);
+  }, [isMobile]);
 
   const handleSlideClick = (index) => {
     if (isMobile) {
@@ -396,6 +449,33 @@ const SwiperDemo = () => {
       log(`Slide ${index} is already active, deactivating it`);
       setActiveSlide(null);
       setIsTransitioning(false);
+
+      // Resume autoplay when deactivating a slide
+      if (swiperRef.current && swiperRef.current.autoplay) {
+        log(`Resuming autoplay after deactivating slide on mobile`);
+        setIsAutoplayPaused(false);
+
+        // Use the same approach as for desktop to avoid the glitch
+        swiperRef.current.autoplay.stop();
+
+        setTimeout(() => {
+          if (swiperRef.current) {
+            // Reset the autoplay with original parameters
+            swiperRef.current.params.autoplay = {
+              delay: 0,
+              disableOnInteraction: false,
+              waitForTransition: true,
+            };
+
+            // Ensure the speed parameter is preserved
+            swiperRef.current.params.speed = SWIPER_SPEED;
+
+            swiperRef.current.autoplay.start();
+            log(`Autoplay resumed with speed: ${SWIPER_SPEED}ms`);
+          }
+        }, 50);
+      }
+
       return;
     }
 
@@ -516,7 +596,7 @@ const SwiperDemo = () => {
 
   const generateSlides = () => {
     const slides = [];
-    const visibleSlidesCount = 20;
+    const visibleSlidesCount = 100;
 
     const preloadSlideImages = () => {
       const imageSources = [];
@@ -569,7 +649,7 @@ const SwiperDemo = () => {
           className={slideClasses}
           {...dataAttributes}
           style={{
-            backgroundColor: config.backgroundColor,
+            // backgroundColor: config.backgroundColor,
             zIndex: isActive ? 10 : config.zIndex,
           }}
           onMouseEnter={() => !isMobile && handleMouseEnter(index)}
@@ -625,13 +705,13 @@ const SwiperDemo = () => {
     >
       <Swiper
         onSwiper={handleSwiperInit}
-        spaceBetween={isMobile ? -30 : -80}
+        spaceBetween={isMobile ? -40 : -80}
         slidesPerView="auto"
         centeredSlides={!!isMobile}
         modules={[Autoplay, freeMode]}
         autoplay={{ delay: 0 }}
         loop={true}
-        speed={isMobile ? 1000 : 5000}
+        speed={SWIPER_SPEED}
         freeMode={{
           log,
           enabled: true,
