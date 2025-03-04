@@ -144,13 +144,22 @@ footer {
   transition: transform 0.4s ease-out;
 }
 
-/* When a slide is active, push others away */
+/* When a slide is active, push others away with dynamic spacing */
 .has-active-slide .slide-inactive[data-relative-position="before"] {
-  transform: translateX(-60px);
+  transform: translateX(
+    calc(
+      -140px * var(--slide-scale, 1) * var(--slide-spacing-factor, 1) - (var(--slide-pos-x, 0px))
+    )
+  );
 }
 
 .has-active-slide .slide-inactive[data-relative-position="after"] {
-  transform: translateX(60px);
+  transform: translateX(
+    calc(
+      140px * var(--slide-scale, 1) * var(--slide-spacing-factor, 1) +
+        (var(--slide-pos-x, 0px))
+    )
+  );
 }
 
 /* Slide hover effect */
@@ -220,33 +229,30 @@ footer {
     transition: transform 0.4s ease;
   }
 
-  /* Enhanced push effect for inactive slides */
+  /* Enhanced push effect for inactive slides with dynamic spacing */
   .has-active-slide .slide-inactive[data-relative-position="before"] {
-    transform: translateX(-60px);
+    transform: translateX(
+      calc(
+        -80px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) - (var(
+                --slide-pos-x,
+                0px
+              ) * 0.6)
+      )
+    );
     opacity: 0.6;
     transition: all 0.4s ease;
   }
 
   .has-active-slide .slide-inactive[data-relative-position="after"] {
-    transform: translateX(60px);
+    transform: translateX(
+      calc(
+        80px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) +
+          (var(--slide-pos-x, 0px) * 0.6)
+      )
+    );
     opacity: 0.6;
     transition: all 0.4s ease;
   }
-
-  /* Pulsing border animation for active slide on mobile */
-  /* .slide-active::after {
-    content: "";
-    position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    border: 2px solid rgba(255, 255, 255, 0.8);
-    border-radius: 15px;
-    animation: pulseBorder 1.5s infinite;
-    pointer-events: none;
-    z-index: 11;
-  } */
 
   /* Disable pulsing during transitions */
   .is-transitioning .slide-active::after {
@@ -285,28 +291,40 @@ footer {
   }
 }
 
+/* Small mobile-specific adjustments */
 @media (max-width: 480px) {
   .swiper-container {
-    height: 400px;
-    padding: 30px 0;
+    height: 280px;
+    padding: 15px;
   }
 
   .swiper-slide {
-    width: 150px !important;
+    width: 120px;
   }
 
   .slide {
-    height: 200px;
-    border-width: 2px;
+    transform: scale(0.9);
   }
 
   .has-active-slide .slide-inactive[data-relative-position="before"] {
-    transform: translateX(-30px);
-    opacity: 0.6; /* Further reduce opacity for smaller screens */
+    transform: translateX(
+      calc(
+        -60px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) - (var(
+                --slide-pos-x,
+                0px
+              ) * 0.4)
+      )
+    );
+    opacity: 0.5;
   }
 
   .has-active-slide .slide-inactive[data-relative-position="after"] {
-    transform: translateX(30px);
-    opacity: 0.6; /* Further reduce opacity for smaller screens */
+    transform: translateX(
+      calc(
+        60px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) +
+          (var(--slide-pos-x, 0px) * 0.4)
+      )
+    );
+    opacity: 0.5;
   }
 }

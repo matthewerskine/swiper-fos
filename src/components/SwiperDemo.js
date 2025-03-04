@@ -632,6 +632,29 @@ const SwiperDemo = () => {
       } ${isDragging ? "is-dragging" : ""} ${
         isTransitioning ? "is-transitioning" : ""
       }`;
+
+      // Calculate normalized posX for CSS variables
+      let normalizedPosX = "0px";
+      if (config.posX) {
+        // If it's a simple pixel value like "10px"
+        if (config.posX.endsWith("px")) {
+          normalizedPosX = config.posX;
+        }
+        // For percentage or calc values, we use a multiplier for consistent spacing
+        else if (config.posX.includes("%") || config.posX.includes("calc")) {
+          // Extract any numeric value from the start of the string or use 0
+          const match = config.posX.match(/[-]?\d+/);
+          const numericValue = match ? parseInt(match[0]) : 0;
+          // Normalize to a pixel offset based on the numeric value
+          normalizedPosX = `${numericValue}px`;
+        }
+      }
+
+      // Calculate spacing adjustment without affecting original scale
+      // This preserves the original scale for visual appearance
+      // but provides a multiplier for spacing calculations only
+      const spacingAdjustment = isMobile ? 0.8 : 1;
+
       const dataAttributes = {
         "data-index": index,
         "data-active": isActive ? "true" : "false",
@@ -651,6 +674,12 @@ const SwiperDemo = () => {
           style={{
             // backgroundColor: config.backgroundColor,
             zIndex: isActive ? 10 : config.zIndex,
+            // Add CSS variables to control dynamic spacing
+            "--slide-scale": config.scale,
+            "--slide-spacing-factor": spacingAdjustment,
+            "--slide-pos-x": normalizedPosX,
+            "--slide-hover-scale": config.hoverScale,
+            "--slide-is-mobile": isMobile ? "1" : "0",
           }}
           onMouseEnter={() => !isMobile && handleMouseEnter(index)}
           onMouseLeave={() => !isMobile && handleMouseLeave()}
