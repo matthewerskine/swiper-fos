@@ -734,7 +734,7 @@ const SwiperDemo = () => {
     >
       <Swiper
         onSwiper={handleSwiperInit}
-        spaceBetween={isMobile ? -40 : -80}
+        spaceBetween={-80}
         slidesPerView="auto"
         centeredSlides={!!isMobile}
         modules={[Autoplay, freeMode]}
