@@ -261,8 +261,9 @@ const SwiperDemo = () => {
   const autoplayTimeoutRef = useRef(null);
   const containerRef = useRef(null);
   const slidesRef = useRef([]);
-
   const scaleTransitionDelay = 400;
+  const autoplayCheckIntervalRef = useRef(null);
+
   const slidingSpeed = 400;
 
   useEffect(() => {
@@ -272,12 +273,15 @@ const SwiperDemo = () => {
       log(`Device detected as ${newIsMobile ? "mobile" : "desktop"}`);
     };
 
+    // Initial check
     checkMobile();
+
+    // Add event listener
     window.addEventListener("resize", checkMobile);
 
+    // Clean up
     return () => {
       window.removeEventListener("resize", checkMobile);
-      log("Component unmounted, resize listener removed");
     };
   }, []);
 
@@ -317,6 +321,12 @@ const SwiperDemo = () => {
       setIsAutoplayPaused(true);
       if (swiperRef.current.autoplay) {
         swiperRef.current.autoplay.stop(true);
+      }
+
+      // Clear any existing resumption timeout
+      if (autoplayTimeoutRef.current) {
+        clearTimeout(autoplayTimeoutRef.current);
+        autoplayTimeoutRef.current = null;
       }
     }
   };
@@ -375,6 +385,18 @@ const SwiperDemo = () => {
     log(`Mouse entered slide ${index}`);
     setIsMouseOverSlide(true);
     setActiveSlide(index);
+
+    // Make sure autoplay stays paused when hovering over a slide
+    if (swiperRef.current && swiperRef.current.autoplay) {
+      setIsAutoplayPaused(true);
+      swiperRef.current.autoplay.stop(true);
+
+      // Clear any existing resumption timeout
+      if (autoplayTimeoutRef.current) {
+        clearTimeout(autoplayTimeoutRef.current);
+        autoplayTimeoutRef.current = null;
+      }
+    }
   };
 
   const handleMouseLeave = () => {
@@ -720,6 +742,33 @@ const SwiperDemo = () => {
 
   const slides = generateSlides();
   log(`Generated ${slides.length} slides`);
+
+  // Add effect to continuously ensure autoplay is paused when mouse is over container
+  useEffect(() => {
+    if (
+      !isMobile &&
+      (isMouseOverSlide || containerRef.current?.matches(":hover"))
+    ) {
+      // Set up an interval to continuously ensure autoplay is paused
+      autoplayCheckIntervalRef.current = setInterval(() => {
+        if (swiperRef.current && swiperRef.current.autoplay) {
+          log("Ensuring autoplay remains paused");
+          setIsAutoplayPaused(true);
+          swiperRef.current.autoplay.stop(true);
+        }
+      }, 300); // Check every 300ms
+    } else if (autoplayCheckIntervalRef.current) {
+      clearInterval(autoplayCheckIntervalRef.current);
+      autoplayCheckIntervalRef.current = null;
+    }
+
+    return () => {
+      if (autoplayCheckIntervalRef.current) {
+        clearInterval(autoplayCheckIntervalRef.current);
+        autoplayCheckIntervalRef.current = null;
+      }
+    };
+  }, [isMobile, isMouseOverSlide, isSwiperInitialized]);
 
   return (
     <div

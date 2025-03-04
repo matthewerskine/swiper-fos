@@ -233,10 +233,10 @@ footer {
   .has-active-slide .slide-inactive[data-relative-position="before"] {
     transform: translateX(
       calc(
-        -80px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) - (var(
+        -120px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) - (var(
                 --slide-pos-x,
                 0px
-              ) * 0.6)
+              ) * 0.8)
       )
     );
     opacity: 0.6;
@@ -246,8 +246,8 @@ footer {
   .has-active-slide .slide-inactive[data-relative-position="after"] {
     transform: translateX(
       calc(
-        80px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) +
-          (var(--slide-pos-x, 0px) * 0.6)
+        120px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) +
+          (var(--slide-pos-x, 0px) * 0.8)
       )
     );
     opacity: 0.6;
@@ -309,10 +309,10 @@ footer {
   .has-active-slide .slide-inactive[data-relative-position="before"] {
     transform: translateX(
       calc(
-        -60px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) - (var(
+        -100px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) - (var(
                 --slide-pos-x,
                 0px
-              ) * 0.4)
+              ) * 0.6)
       )
     );
     opacity: 0.5;
@@ -321,8 +321,8 @@ footer {
   .has-active-slide .slide-inactive[data-relative-position="after"] {
     transform: translateX(
       calc(
-        60px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) +
-          (var(--slide-pos-x, 0px) * 0.4)
+        100px * var(--slide-scale, 1) * var(--slide-spacing-factor, 0.8) +
+          (var(--slide-pos-x, 0px) * 0.6)
       )
     );
     opacity: 0.5;
