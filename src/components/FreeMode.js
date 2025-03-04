@@ -25,23 +25,26 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
       sticky: false,
       minimumVelocity: 0.02,
       centerOnTap: true,
+      log: window?.log,
     },
   });
 
   function centerSlideInViewport(slideIndex, speed = 300) {
     if (!swiper || !swiper.params.freeMode.centerOnTap) return;
 
-    // Check if we're on mobile - only apply this on mobile
-    const isMobileView = window.innerWidth < 768; // Use the same breakpoint as in SwiperDemo
+    // TODO: Pass this as extended param
+    const isMobileView = window.innerWidth < 768;
     if (!isMobileView) {
-      if (typeof window !== "undefined" && window.log) {
-        window.log(`FreeMode: Skipping centering on non-mobile device`);
+      if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+        swiper.params.freeMode.log(
+          `FreeMode: Skipping centering on non-mobile device`
+        );
       }
       return false;
     }
 
-    if (typeof window !== "undefined" && window.log) {
-      window.log(
+    if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+      swiper.params.freeMode.log(
         `FreeMode: Using improved slide centering for slide ${slideIndex}`
       );
     }
@@ -58,8 +61,8 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
         parseInt(slideDataIndex, 10) === slideIndex
       ) {
         targetSlide = slide;
-        if (typeof window !== "undefined" && window.log) {
-          window.log(
+        if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+          swiper.params.freeMode.log(
             `FreeMode: Found target slide at position ${i} with data-index ${slideIndex}`
           );
         }
@@ -70,16 +73,18 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
     // If we couldn't find a slide with the matching data-index, fall back to index
     if (!targetSlide) {
       targetSlide = swiper.slides[slideIndex];
-      if (typeof window !== "undefined" && window.log) {
-        window.log(
+      if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+        swiper.params.freeMode.log(
           `FreeMode: Couldn't find slide with data-index ${slideIndex}, using position index`
         );
       }
     }
 
     if (!targetSlide) {
-      if (typeof window !== "undefined" && window.log) {
-        window.log(`FreeMode: Couldn't find slide ${slideIndex}`);
+      if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+        swiper.params.freeMode.log(
+          `FreeMode: Couldn't find slide ${slideIndex}`
+        );
       }
       return false;
     }
@@ -87,8 +92,10 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
     // Target the image inside the slide, not the slide itself
     const slideImage = targetSlide.querySelector(".slide-image");
     if (!slideImage) {
-      if (typeof window !== "undefined" && window.log) {
-        window.log(`FreeMode: Couldn't find image in slide ${slideIndex}`);
+      if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+        swiper.params.freeMode.log(
+          `FreeMode: Couldn't find image in slide ${slideIndex}`
+        );
       }
       return false;
     }
@@ -101,16 +108,16 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
     const swiperContainer = swiper.el.closest(".swiper-container");
     if (swiperContainer) {
       containerRect = swiperContainer.getBoundingClientRect();
-      if (typeof window !== "undefined" && window.log) {
-        window.log(
+      if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+        swiper.params.freeMode.log(
           `FreeMode: Using swiper-container for centering calculations`
         );
       }
     } else {
       // Fallback to swiper.el if swiper-container not found
       containerRect = swiper.el.getBoundingClientRect();
-      if (typeof window !== "undefined" && window.log) {
-        window.log(
+      if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+        swiper.params.freeMode.log(
           `FreeMode: Couldn't find swiper-container, using swiper.el instead`
         );
       }
@@ -129,8 +136,8 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
     const currentTranslate = swiper.getTranslate();
     let targetTranslate = currentTranslate + offset;
 
-    if (typeof window !== "undefined" && window.log) {
-      window.log(
+    if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+      swiper.params.freeMode.log(
         `FreeMode: Centering calculations (based on image) - 
         Viewport center: ${viewportCenter}, 
         Image center: ${imageCenter}, 
@@ -148,13 +155,15 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
     // Pause autoplay if it's running
     if (swiper.autoplay && swiper.autoplay.running) {
       swiper.autoplay.stop();
-      if (typeof window !== "undefined" && window.log) {
-        window.log(`FreeMode: Pausing autoplay during centering`);
+      if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+        swiper.params.freeMode.log(
+          `FreeMode: Pausing autoplay during centering`
+        );
       }
     }
 
-    if (typeof window !== "undefined" && window.log) {
-      window.log(
+    if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+      swiper.params.freeMode.log(
         `FreeMode: Centering image in slide ${slideIndex} with translate: ${targetTranslate}px`
       );
     }
@@ -212,8 +221,10 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
     const touchX = swiper.touches.currentX;
     const touchY = swiper.touches.currentY;
 
-    if (typeof window !== "undefined" && window.log) {
-      window.log(`FreeMode: Touch detected at X:${touchX}, Y:${touchY}`);
+    if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+      swiper.params.freeMode.log(
+        `FreeMode: Touch detected at X:${touchX}, Y:${touchY}`
+      );
     }
 
     // Detect if this is a tap on a slide or on the background
@@ -275,8 +286,8 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
         tapTargetIsImage = closestHit.isImageHit;
         isBackgroundTap = false;
 
-        if (typeof window !== "undefined" && window.log) {
-          window.log(
+        if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+          swiper.params.freeMode.log(
             `FreeMode: Found ${
               hitCandidates.length
             } possible hits, selected slide ${tapTargetSlide} with distance ${closestHit.distanceToCenter.toFixed(
@@ -285,8 +296,8 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
           );
         }
       } else {
-        if (typeof window !== "undefined" && window.log) {
-          window.log(
+        if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+          swiper.params.freeMode.log(
             `FreeMode: No direct image hits found, tap is on background`
           );
         }
@@ -295,15 +306,17 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
       // Store if this is a background tap
       swiper.isBackgroundTap = isBackgroundTap;
 
-      if (typeof window !== "undefined" && window.log) {
+      if (typeof window !== "undefined" && swiper.params.freeMode.log) {
         if (isBackgroundTap) {
-          window.log(`FreeMode: Detected tap on background (mobile)`);
+          swiper.params.freeMode.log(
+            `FreeMode: Detected tap on background (mobile)`
+          );
         } else if (tapTargetIsImage) {
-          window.log(
+          swiper.params.freeMode.log(
             `FreeMode: Detected tap directly on image in slide ${tapTargetSlide} (mobile)`
           );
         } else {
-          window.log(
+          swiper.params.freeMode.log(
             `FreeMode: Detected tap on slide container ${tapTargetSlide} (mobile)`
           );
         }
@@ -379,15 +392,15 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
       // Make sure autoplay is paused
       if (swiper.autoplay && swiper.autoplay.running) {
         swiper.autoplay.stop();
-        if (typeof window !== "undefined" && window.log) {
-          window.log(`FreeMode: Pausing autoplay on tap`);
+        if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+          swiper.params.freeMode.log(`FreeMode: Pausing autoplay on tap`);
         }
       }
 
       if (swiper.isBackgroundTap) {
         // This was a tap on the background
-        if (typeof window !== "undefined" && window.log) {
-          window.log(
+        if (typeof window !== "undefined" && swiper.params.freeMode.log) {
+          swiper.params.freeMode.log(
             `FreeMode: Background tap detected, deactivating current slide`
           );
         }
@@ -404,13 +417,13 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
       } else if (tapTargetSlide !== null) {
         // If the tap was on an image, center that image
         // If not on an image but on a slide, still center but log differently
-        if (typeof window !== "undefined" && window.log) {
+        if (typeof window !== "undefined" && swiper.params.freeMode.log) {
           if (tapTargetIsImage) {
-            window.log(
+            swiper.params.freeMode.log(
               `FreeMode: Detected tap on image in slide ${tapTargetSlide} (mobile)`
             );
           } else {
-            window.log(
+            swiper.params.freeMode.log(
               `FreeMode: Detected tap on slide container ${tapTargetSlide} (mobile)`
             );
           }
@@ -634,6 +647,7 @@ export default function freeMode({ swiper, extendParams, emit, once }) {
       onTouchStart,
       onTouchMove,
       onTouchEnd,
+      centerSlideInViewport,
     },
   });
 }

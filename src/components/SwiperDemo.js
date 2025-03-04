@@ -35,24 +35,20 @@ const customSlideToLoop = function (
 
   log(`customSlideToLoop called with index: ${index}, speed: ${speed}`);
 
-  // Store original values
   const originalIndex = index;
 
   if (typeof speed === "undefined") {
     speed = swiper.params.speed;
   }
 
-  // Find the target slide with the matching data-index
   let targetSlideIndex = -1;
   let targetSlide = null;
 
-  // Make sure we have slides to work with
   if (!swiper.slides || !swiper.slides.length) {
     log("Error: No slides found in swiper");
     return swiper;
   }
 
-  // Search for the slide with the matching data-index attribute
   try {
     log(`Searching for slide with data-index ${originalIndex}`);
     for (let i = 0; i < swiper.slides.length; i++) {
@@ -76,7 +72,6 @@ const customSlideToLoop = function (
     log(`Error finding slide by data-index: ${err.message}`);
   }
 
-  // If we couldn't find it by data-index, use the original index as fallback
   if (targetSlideIndex === -1 || !targetSlide) {
     log(
       `Couldn't find slide with data-index ${originalIndex}, using original index as fallback`
@@ -92,12 +87,9 @@ const customSlideToLoop = function (
     }
   }
 
-  // Check if we're on mobile to adjust centering
-  const isMobileView = window.innerWidth < 768; // Assuming 768px is the mobile breakpoint
+  const isMobileView = window.innerWidth < 768;
 
   if (isMobileView) {
-    // On mobile, center based on the image, not the slide
-    // Find the image within the slide
     const slideImage = targetSlide.querySelector("img.slide-image");
     if (!slideImage) {
       log(
@@ -106,22 +98,18 @@ const customSlideToLoop = function (
       return swiper;
     }
 
-    // Get measurements
     const viewportWidth = swiper.width;
     const slideWidth = slideImage.offsetWidth;
 
-    // Get more accurate offset calculations
     const slideRect = targetSlide.getBoundingClientRect();
     const imageRect = slideImage.getBoundingClientRect();
     const containerRect = swiper.el.getBoundingClientRect();
 
-    // Calculate the offset relative to the current translation
     const currentTranslate = swiper.getTranslate();
     const imageCenter = imageRect.left + imageRect.width / 2;
     const viewportCenter = containerRect.left + containerRect.width / 2;
     const offsetNeeded = viewportCenter - imageCenter;
 
-    // Calculate the translation needed to center this specific image
     const centeredTranslate = currentTranslate + offsetNeeded;
 
     log(`Precise centering calculation:
@@ -133,7 +121,6 @@ const customSlideToLoop = function (
       - Current translate: ${currentTranslate}px
       - Centered translate: ${centeredTranslate}px`);
 
-    // Directly set the translation to center the slide image
     swiper.setTransition(speed);
     swiper.setTranslate(centeredTranslate);
     swiper.updateActiveIndex(targetSlideIndex);
@@ -146,23 +133,18 @@ const customSlideToLoop = function (
     return swiper;
   }
 
-  // For non-mobile or fallback, continue with normal slide operation
   log(`Sliding to index ${targetSlideIndex} with speed ${speed}ms`);
 
-  // Ensure correct looping for edge slides
   if (swiper.params.loop) {
     const totalSlides = swiper.slides.length;
     const isNearStart = targetSlideIndex < 2;
     const isNearEnd = targetSlideIndex > totalSlides - 3;
 
-    // Simple loopFix for edge cases
     if (isNearStart || isNearEnd) {
       try {
-        // When near the edge, do a simple loop fix
         swiper.loopFix();
         log("Loop fix applied for edge position");
 
-        // Re-find our slide after the loop fix
         for (let i = 0; i < swiper.slides.length; i++) {
           const slide = swiper.slides[i];
           if (!slide) continue;
@@ -183,7 +165,6 @@ const customSlideToLoop = function (
     }
   }
 
-  // Execute the slide operation in a single, clean motion
   return swiper.slideTo(targetSlideIndex, speed, runCallbacks, internal);
 };
 
@@ -254,7 +235,6 @@ const SLIDE_CONFIGS = {
   },
 };
 
-// Add helper function to preload images
 const preloadImage = (src) => {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -273,20 +253,16 @@ const SwiperDemo = () => {
   const [isSwiperInitialized, setIsSwiperInitialized] = useState(false);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const [isAutoplayPaused, setIsAutoplayPaused] = useState(false);
-  const [isMouseOverContainer, setIsMouseOverContainer] = useState(false);
   const [isMouseOverSlide, setIsMouseOverSlide] = useState(false);
   const dragTimeoutRef = useRef(null);
   const transitionTimeoutRef = useRef(null);
   const autoplayTimeoutRef = useRef(null);
   const containerRef = useRef(null);
   const slidesRef = useRef([]);
-  const [touchStartPosition, setTouchStartPosition] = useState(null);
 
-  // Timing constants for transitions
-  const scaleTransitionDelay = 400; // ms - match the CSS transition duration for scaling
-  const slidingSpeed = 400; // ms - match the CSS transition time for sliding
+  const scaleTransitionDelay = 400;
+  const slidingSpeed = 400;
 
-  // Check if device is mobile
   useEffect(() => {
     const checkMobile = () => {
       const newIsMobile = window.innerWidth < 768;
@@ -303,30 +279,27 @@ const SwiperDemo = () => {
     };
   }, []);
 
-  // Cleanup timeouts on unmount
   useEffect(() => {
     log("Component mounted");
 
     return () => {
       log("Component unmounting, cleaning up timeouts");
-      if (dragTimeoutRef.current) {
-        clearTimeout(dragTimeoutRef.current);
+      if (dragTimeoutRef?.current) {
+        clearTimeout(dragTimeoutRef?.current);
       }
-      if (transitionTimeoutRef.current) {
-        clearTimeout(transitionTimeoutRef.current);
+      if (transitionTimeoutRef?.current) {
+        clearTimeout(transitionTimeoutRef?.current);
       }
-      if (autoplayTimeoutRef.current) {
-        clearTimeout(autoplayTimeoutRef.current);
+      if (autoplayTimeoutRef?.current) {
+        clearTimeout(autoplayTimeoutRef?.current);
       }
     };
   }, []);
 
-  // Handle Swiper initialization
   const handleSwiperInit = (swiper) => {
     log("Swiper initialized");
     swiperRef.current = swiper;
 
-    // Add our custom slideToLoop method directly to the swiper instance
     swiper.slideToLoop = function (index, speed, runCallbacks, internal) {
       return customSlideToLoop(this, index, speed, runCallbacks, internal);
     };
@@ -334,25 +307,20 @@ const SwiperDemo = () => {
     setIsSwiperInitialized(true);
   };
 
-  // Pause autoplay when mouse enters the container
   const handleContainerMouseEnter = () => {
     log("Mouse entered container");
-    setIsMouseOverContainer(true);
 
     if (!isMobile && isSwiperInitialized && swiperRef.current) {
       log("Pausing autoplay (container mouse enter)");
       setIsAutoplayPaused(true);
       if (swiperRef.current.autoplay) {
-        // Use the enhanced stop method to immediately stop autoplay
         swiperRef.current.autoplay.stop(true);
       }
     }
   };
 
-  // Resume autoplay when mouse leaves the container
   const handleContainerMouseLeave = () => {
     log("Mouse left container");
-    setIsMouseOverContainer(false);
 
     if (!isMobile && isSwiperInitialized && !isDragging && !isMouseOverSlide) {
       if (autoplayTimeoutRef.current) {
@@ -365,7 +333,6 @@ const SwiperDemo = () => {
           log("Resuming autoplay (after container leave delay)");
           setIsAutoplayPaused(false);
           if (swiperRef.current && swiperRef.current.autoplay) {
-            // Start autoplay which will now clear transition listeners
             swiperRef.current.autoplay.start();
           }
         } else {
@@ -375,7 +342,6 @@ const SwiperDemo = () => {
     }
   };
 
-  // Stops autoplay and applies hover effects
   const handleMouseEnter = (index) => {
     if (isDragging || !isSwiperInitialized || isTransitioning || isMobile)
       return;
@@ -384,7 +350,6 @@ const SwiperDemo = () => {
     setActiveSlide(index);
   };
 
-  // Resumes autoplay after leaving with a delay
   const handleMouseLeave = () => {
     if (isDragging || !isSwiperInitialized || isTransitioning || isMobile)
       return;
@@ -393,23 +358,19 @@ const SwiperDemo = () => {
     setActiveSlide(null);
   };
 
-  // Add a useEffect to listen for background taps
   useEffect(() => {
     const handleBackgroundTap = () => {
       log(`Background tap detected, deactivating current slide`);
       setActiveSlide(null);
     };
 
-    // Add event listener for background taps
     window.addEventListener("swiperBackgroundTap", handleBackgroundTap);
 
-    // Clean up
     return () => {
       window.removeEventListener("swiperBackgroundTap", handleBackgroundTap);
     };
   }, []);
 
-  // Handle slide click for mobile
   const handleSlideClick = (index) => {
     if (isMobile) {
       log(`Slide ${index} tapped on mobile`);
@@ -418,29 +379,19 @@ const SwiperDemo = () => {
       return;
     }
 
-    // If we're already in a transition, ignore this click
     if (isTransitioning) {
       log(`Ignoring click during transition`);
       return;
     }
 
-    // For non-mobile, we don't want the tap-to-center behavior
     if (!isMobile) {
       log(`Non-mobile click, not centering slide`);
       return;
     }
 
-    // Set transitioning state to prevent multiple clicks
     setIsTransitioning(true);
     log(`Setting transitioning state to prevent multiple taps`);
 
-    // Pause autoplay when user interacts with slides
-    if (swiperRef.current && swiperRef.current.autoplay) {
-      swiperRef.current.autoplay.stop(true); // Force immediate stop
-      log(`Pausing autoplay (slide tap)`);
-    }
-
-    // If the slide is already active, deactivate it (toggle behavior)
     if (activeSlide === index) {
       log(`Slide ${index} is already active, deactivating it`);
       setActiveSlide(null);
@@ -448,17 +399,20 @@ const SwiperDemo = () => {
       return;
     }
 
-    // Set active slide to the clicked one
+    // (Only pause Autoplay if the slide is now activated)
+    if (swiperRef.current && swiperRef.current.autoplay) {
+      swiperRef.current.autoplay.stop(true);
+      log(`Pausing autoplay (slide tap)`);
+    }
+
     setActiveSlide(index);
     log(`Setting slide ${index} as active to scale the image`);
 
-    // A simpler approach: wait for CSS transition to finish, then do the slide
     const transitionDelay = scaleTransitionDelay;
     log(
       `Waiting ${transitionDelay}ms for scaling transition to complete before centering`
     );
 
-    // Schedule the end of the transition state
     log(`Scheduling end of transition state`);
     const transitionTimer = setTimeout(() => {
       if (swiperRef.current) {
@@ -466,31 +420,31 @@ const SwiperDemo = () => {
           `Scaling transition should be complete, now centering slide ${index}`
         );
 
-        // Make sure autoplay is still paused during transitions
         if (
           swiperRef.current &&
           swiperRef.current.autoplay &&
           swiperRef.current.autoplay.running
         ) {
-          swiperRef.current.autoplay.stop(true); // Force immediate stop
+          swiperRef.current.autoplay.stop(true);
           log(`Ensuring autoplay remains paused during centering`);
         }
 
-        // Use our custom slideToLoop function for better positioning
         try {
-          // On mobile, FreeMode's centerOnTap will handle the centering,
-          // so we only need to use customSlideToLoop for non-mobile or
-          // if FreeMode is disabled
           if (!isMobile || !swiperRef.current.params.freeMode.enabled) {
             customSlideToLoop(swiperRef.current, index, slidingSpeed);
+          } else if (isMobile && swiperRef.current.params.freeMode.enabled) {
+            // For mobile with freeMode enabled, explicitly call centerSlideInViewport
+            log(`Using FreeMode's centerSlideInViewport for slide ${index}`);
+            swiperRef.current.freeMode.centerSlideInViewport(
+              index,
+              slidingSpeed
+            );
           }
         } catch (err) {
           log(`Error during slideToLoop: ${err.message}`);
         }
 
-        // Allow interactions after sliding completes
         setTimeout(() => {
-          // Make sure autoplay is still paused
           if (
             swiperRef.current &&
             swiperRef.current.autoplay &&
@@ -502,7 +456,7 @@ const SwiperDemo = () => {
 
           log(`Ending transition state, allowing new interactions`);
           setIsTransitioning(false);
-        }, slidingSpeed + 50); // Add a small buffer after the sliding is done
+        }, slidingSpeed + 50);
       } else {
         log(`Swiper instance no longer available, ending transition state`);
         setIsTransitioning(false);
@@ -514,31 +468,25 @@ const SwiperDemo = () => {
     };
   };
 
-  // Handle drag start
   const handleDragStart = () => {
     log("Drag started");
     setIsDragging(true);
     setActiveSlide(null);
-    setTouchStartPosition(null); // Reset touch start position
 
-    // Pause autoplay during drag
     if (swiperRef.current && swiperRef.current.autoplay) {
       log("Pausing autoplay (drag start)");
-      swiperRef.current.autoplay.stop(true); // Force immediate stop
+      swiperRef.current.autoplay.stop(true);
       setIsAutoplayPaused(true);
     }
   };
 
-  // Handle drag end
   const handleDragEnd = () => {
     log("Drag ended");
     setIsDragging(false);
 
-    // If we were dragging the active slide, snap to center it
     if (activeSlide !== null && swiperRef.current) {
       log(`Drag ended with active slide ${activeSlide}, snapping to center`);
 
-      // Use our custom slideToLoop function for better positioning
       try {
         customSlideToLoop(swiperRef.current, activeSlide, slidingSpeed);
       } catch (err) {
@@ -546,38 +494,31 @@ const SwiperDemo = () => {
       }
     }
 
-    // Schedule the end of any potential transitioning state
     setTimeout(() => {
       setIsTransitioning(false);
     }, slidingSpeed + 100);
   };
 
-  // CheckForDrag (more accurate for detecting tap vs drag)
   const touchStartCoords = (e) => {
     window.checkForDrag = e.touches?.[0]?.clientX;
   };
 
-  // If a tap is detected, run a tap handler
   const touchEndCoords = (e) => {
     const touchEnd = e.changedTouches?.[0]?.clientX;
     if (
       touchEnd < window.checkForDrag + 10 &&
       touchEnd > window.checkForDrag - 10
     ) {
-      // It's a click (minimal movement)
       const index = e.currentTarget?.dataset?.index;
       handleSlideClick(index);
     }
   };
 
-  // Function to generate slides
   const generateSlides = () => {
     const slides = [];
     const visibleSlidesCount = 20;
 
-    // Preload images for all slides to prevent loading gaps during fast scrolling
     const preloadSlideImages = () => {
-      // Create array of image sources to preload
       const imageSources = [];
       for (let index = 0; index < visibleSlidesCount; index++) {
         const position = (index % 7) + 1;
@@ -585,7 +526,6 @@ const SwiperDemo = () => {
         imageSources.push(imageUrl);
       }
 
-      // Preload all images in parallel
       Promise.all(
         imageSources.map((src) => preloadImage(src).catch(() => null))
       )
@@ -593,9 +533,7 @@ const SwiperDemo = () => {
         .catch((err) => log("Error preloading some images", err));
     };
 
-    // Start preloading images as soon as possible
     if (typeof window !== "undefined") {
-      // Use requestIdleCallback if available (or setTimeout as fallback)
       if ("requestIdleCallback" in window) {
         window.requestIdleCallback(preloadSlideImages);
       } else {
@@ -695,6 +633,7 @@ const SwiperDemo = () => {
         loop={true}
         speed={isMobile ? 1000 : 5000}
         freeMode={{
+          log,
           enabled: true,
           centerOnTap: true,
         }}
