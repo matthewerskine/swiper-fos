@@ -36,6 +36,7 @@ footer {
   background: #f8f8f8;
   overflow: hidden;
   position: relative;
+  user-select: none;
   /* Add 3D perspective */
   /* perspective: 1000px; */
 }
@@ -45,6 +46,7 @@ footer {
   height: 100%;
   position: relative;
   overflow: visible;
+  user-select: none;
 }
 
 .swiper-wrapper {
@@ -52,6 +54,7 @@ footer {
   align-items: center;
   position: relative;
   padding: 20px 0;
+  user-select: none;
 }
 
 /* Slide styles - using a simpler approach */

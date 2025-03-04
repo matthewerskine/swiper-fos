@@ -745,10 +745,7 @@ const SwiperDemo = () => {
 
   // Add effect to continuously ensure autoplay is paused when mouse is over container
   useEffect(() => {
-    if (
-      !isMobile &&
-      (isMouseOverSlide || containerRef.current?.matches(":hover"))
-    ) {
+    if (!isMobile && isMouseOverSlide) {
       // Set up an interval to continuously ensure autoplay is paused
       autoplayCheckIntervalRef.current = setInterval(() => {
         if (swiperRef.current && swiperRef.current.autoplay) {
