@@ -310,6 +310,18 @@ const SwiperDemo = () => {
       return customSlideToLoop(this, index, speed, runCallbacks, internal);
     };
 
+    // Explicitly set speed to ensure consistent behavior
+    swiper.params.speed = SWIPER_SPEED;
+
+    // Force update to apply parameters
+    swiper.update();
+
+    // Ensure autoplay is properly initialized
+    if (swiper.autoplay && swiper.autoplay.running) {
+      // If somehow autoplay got stopped during init, restart it
+      swiper.autoplay.start();
+    }
+
     setIsSwiperInitialized(true);
   };
 
@@ -371,7 +383,7 @@ const SwiperDemo = () => {
               swiperRef.current.params.speed = SWIPER_SPEED;
 
               swiperRef.current.autoplay.start();
-              log(`Autoplay resumed with speed: ${SWIPER_SPEED}ms`);
+              log(`Continuous autoplay resumed with speed: ${SWIPER_SPEED}ms`);
             }
           }, 50);
         }
@@ -433,7 +445,7 @@ const SwiperDemo = () => {
             swiperRef.current.params.speed = SWIPER_SPEED;
 
             swiperRef.current.autoplay.start();
-            log(`Autoplay resumed with speed: ${SWIPER_SPEED}ms`);
+            log(`Continuous autoplay resumed with speed: ${SWIPER_SPEED}ms`);
           }
         }, 50);
       }
@@ -493,7 +505,7 @@ const SwiperDemo = () => {
             swiperRef.current.params.speed = SWIPER_SPEED;
 
             swiperRef.current.autoplay.start();
-            log(`Autoplay resumed with speed: ${SWIPER_SPEED}ms`);
+            log(`Continuous autoplay resumed with speed: ${SWIPER_SPEED}ms`);
           }
         }, 50);
       }
@@ -784,7 +796,11 @@ const SwiperDemo = () => {
         slidesPerView="auto"
         centeredSlides={!!isMobile}
         modules={[Autoplay, freeMode]}
-        autoplay={{ delay: 0 }}
+        autoplay={{
+          delay: 0,
+          disableOnInteraction: false,
+          pauseOnMouseEnter: false,
+        }}
         loop={true}
         speed={SWIPER_SPEED}
         freeMode={{

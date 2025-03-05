@@ -104,6 +104,7 @@ export default function Autoplay({ swiper, extendParams, on, emit, params }) {
       autoplayDelayCurrent = currentSlideDelay;
     }
     autoplayTimeLeft = delay;
+
     const speed = swiper.params.speed;
     const proceed = () => {
       if (!swiper || swiper.destroyed) return;
@@ -124,6 +125,27 @@ export default function Autoplay({ swiper, extendParams, on, emit, params }) {
           emit("autoplay");
         }
       }
+
+      // For continuous movement, we always run again after transition
+      if (!swiper.params.cssMode && swiper.autoplay.running) {
+        if (swiper.params.autoplay.delay === 0) {
+          // For zero delay, use requestAnimationFrame for smoother animation
+          requestAnimationFrame(() => {
+            if (swiper && !swiper.destroyed && swiper.autoplay.running) {
+              run();
+            }
+          });
+        } else {
+          // For normal delay, use the standard autoplay mechanism
+          clearTimeout(timeout);
+          timeout = setTimeout(() => {
+            if (swiper && !swiper.destroyed && swiper.autoplay.running) {
+              run();
+            }
+          }, 0);
+        }
+      }
+
       if (swiper.params.cssMode) {
         autoplayStartTime = new Date().getTime();
         requestAnimationFrame(() => {
@@ -157,6 +179,17 @@ export default function Autoplay({ swiper, extendParams, on, emit, params }) {
     swiper.autoplay.running = false;
     clearTimeout(timeout);
     cancelAnimationFrame(raf);
+
+    // Remove any active transitionend listeners to prevent resume
+    swiper.wrapperEl.removeEventListener("transitionend", onTransitionEnd);
+
+    // For zero-delay autoplay, make sure we clear any pending animation frames
+    if (swiper.params.autoplay.delay === 0) {
+      // We can't cancel specific requestAnimationFrame calls,
+      // but setting running to false will prevent execution in the callback
+      swiper.autoplay.paused = true; // Extra safety
+    }
+
     emit("autoplayStop");
   };
   const pause = (internal, reset) => {
