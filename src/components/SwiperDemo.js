@@ -459,6 +459,12 @@ const SwiperDemo = () => {
   }, [isMobile]);
 
   const handleSlideClick = (index) => {
+    if (!index) {
+      setActiveSlide(null);
+      log(`Click handler called with no index, unsetting active slide`);
+      return;
+    }
+
     if (isMobile) {
       log(`Slide ${index} tapped on mobile`);
     } else {
